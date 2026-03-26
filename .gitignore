@@ -115,3 +115,5 @@ _emscripten_sdk/
 
 # virtual Python environment
 .venv
+node_modules/
+drone-ui/node_modules/

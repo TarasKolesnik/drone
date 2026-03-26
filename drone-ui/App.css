@@ -1,0 +1,137 @@
+/* src/App.css */
+.app {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+}
+
+.status {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+.status.connected {
+  background: #d4edda;
+  color: #155724;
+}
+.status.disconnected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.main-panel {
+  display: grid;
+  grid-template-columns: 1fr 300px 280px;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.simulation-window {
+  background: #1a1a2e;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.control-panel,
+.telemetry-panel {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn.arm {
+  background: #28a745;
+  color: white;
+}
+.btn.disarm {
+  background: #dc3545;
+  color: white;
+}
+.btn.takeoff {
+  background: #007bff;
+  color: white;
+}
+.btn.land {
+  background: #ffc107;
+  color: #212529;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.mode-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mode-group button {
+  padding: 8px 16px;
+  background: #e9ecef;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+.mode-group button:hover {
+  background: #dee2e6;
+}
+
+.telemetry-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.telemetry-panel td {
+  padding: 8px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+.telemetry-panel td:first-child {
+  font-weight: bold;
+  width: 40%;
+}
+
+.joystick-panel {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+.joystick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+.joystick {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  min-height: 200px;
+}

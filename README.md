@@ -1,110 +1,199 @@
-<p align="center">
-  <a href="https://px4.io">
-    <img src="docs/assets/site/px4_logo.svg" alt="PX4 Autopilot" width="240">
-  </a>
-</p>
+# Drone Control: WEB UI -> Backend: Python MAVLink (WebSocket) -> Virtual drone: PX4 SITL (jMAVSim)
 
-<p align="center">
-  <em>The autopilot stack the industry builds on.</em>
-</p>
+Локальний проєкт для керування віртуальним дроном у **PX4 SITL + jMAVSim** через:
 
-<p align="center">
-  <a href="https://github.com/PX4/PX4-Autopilot/releases"><img src="https://img.shields.io/github/release/PX4/PX4-Autopilot.svg" alt="Releases"></a>
-  <a href="https://www.bestpractices.dev/projects/6520"><img src="https://www.bestpractices.dev/projects/6520/badge" alt="OpenSSF Best Practices"></a>
-  <a href="https://zenodo.org/badge/latestdoi/22634/PX4/PX4-Autopilot"><img src="https://zenodo.org/badge/22634/PX4/PX4-Autopilot.svg" alt="DOI"></a>
-  <a href="https://github.com/PX4/PX4-Autopilot/actions/workflows/build_all_targets.yml"><img src="https://github.com/PX4/PX4-Autopilot/actions/workflows/build_all_targets.yml/badge.svg?branch=main" alt="Build Targets"></a>
-  <a href="https://discord.gg/dronecode"><img src="https://discordapp.com/api/guilds/1022170275984457759/widget.png?style=shield" alt="Discord"></a>
-</p>
+- **FastAPI backend** (`app.py`) — MAVLink (WebSocket) команди до PX4
+- **React UI** (`drone-ui`) — кнопки, слайдери, керування з клавіатури
+
+> Важливо: jMAVSim відкривається як **окреме desktop-вікно** (Java), не всередині браузера.
+
+Компоненти:
+
+1. PX4 SITL + jMAVSim — емуляція автопілота та 3D-візуалізація дрона
+2. Python Backend (FastAPI) — проксі між вебом та MAVLink (WebSocket), обробка команд
+3. Web UI — інтерфейс керування
 
 ---
 
-## About
+## 1) Вимоги
 
-PX4 is an open-source autopilot stack for drones and unmanned vehicles. It supports multirotors, fixed-wing, VTOL, rovers, and many more experimental platforms from racing quads to industrial survey aircraft. It runs on [NuttX](https://nuttx.apache.org/), Linux, and macOS. Licensed under [BSD 3-Clause](LICENSE).
+- macOS / Linux
+- Python 3.10+
+- Node.js 18+ та npm
+- CMake, Ninja, компілятор C/C++
+- Java JDK + Ant (для `jMAVSim`)
 
-## Why PX4
+---
 
-**Modular architecture.** PX4 is built around [uORB](https://docs.px4.io/main/en/middleware/uorb.html), a [DDS](https://docs.px4.io/main/en/middleware/uxrce_dds.html)-compatible publish/subscribe middleware. Modules are fully parallelized and thread safe. You can build custom configurations and trim what you don't need.
+## 2) Install (перший запуск)
 
-**Wide hardware support.** PX4 runs on a wide range of [autopilot boards](https://docs.px4.io/main/en/flight_controller/) and supports an extensive set of sensors, telemetry radios, and actuators through the [Pixhawk](https://pixhawk.org/) ecosystem.
-
-**Developer friendly.** First-class support for [MAVLink](https://mavlink.io/) and [DDS / ROS 2](https://docs.px4.io/main/en/ros2/) integration. Comprehensive [SITL simulation](https://docs.px4.io/main/en/simulation/), hardware-in-the-loop testing, and [log analysis](https://docs.px4.io/main/en/log/flight_log_analysis.html) tools. An active developer community on [Discord](https://discord.gg/dronecode) and the [weekly dev call](https://docs.px4.io/main/en/contribute/).
-
-**Vendor neutral governance.** PX4 is hosted under the [Dronecode Foundation](https://www.dronecode.org/), part of the Linux Foundation. Business-friendly BSD-3 license. No single vendor controls the roadmap.
-
-## Supported Vehicles
-
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://docs.px4.io/main/en/frames_multicopter/">
-        <img src="docs/assets/airframes/types/QuadRotorX.svg" width="50" alt="Multicopter"><br>
-        <sub>Multicopter</sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://docs.px4.io/main/en/frames_plane/">
-        <img src="docs/assets/airframes/types/Plane.svg" width="50" alt="Fixed Wing"><br>
-        <sub>Fixed Wing</sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://docs.px4.io/main/en/frames_vtol/">
-        <img src="docs/assets/airframes/types/VTOLPlane.svg" width="50" alt="VTOL"><br>
-        <sub>VTOL</sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://docs.px4.io/main/en/frames_rover/">
-        <img src="docs/assets/airframes/types/Rover.svg" width="50" alt="Rover"><br>
-        <sub>Rover</sub>
-      </a>
-    </td>
-  </tr>
-</table>
-
-<sub>…and many more: helicopters, autogyros, airships, submarines, boats, and other experimental platforms. These frames have basic support but are not part of the regular flight-test program. See the <a href="https://docs.px4.io/main/en/airframes/airframe_reference.html">full airframe reference</a>.</sub>
-
-## Quick Start
+### 2.1 Python середовище для PX4 і backend
 
 ```bash
-git clone https://github.com/PX4/PX4-Autopilot.git --recursive
-cd PX4-Autopilot
-make px4_sitl
+cd /path/to/drone
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -r Tools/setup/requirements.txt
+python -m pip install "empy==3.3.4" pyros-genmsg
 ```
 
-> [!NOTE]
-> See the [Development Guide](https://docs.px4.io/main/en/development/development.html) for toolchain setup and build options.
+> `empy==3.3.4` потрібен для сумісності PX4-генераторів (щоб не було `module 'em' has no attribute 'RAW_OPT'`).
 
-## Documentation & Resources
+### 2.2 jMAVSim залежності (macOS/Homebrew)
 
-| Resource | Description |
-| --- | --- |
-| [User Guide](https://docs.px4.io/main/en/) | Build, configure, and fly with PX4 |
-| [Developer Guide](https://docs.px4.io/main/en/development/development.html) | Modify the flight stack, add peripherals, port to new hardware |
-| [Airframe Reference](https://docs.px4.io/main/en/airframes/airframe_reference.html) | Full list of supported frames |
-| [Autopilot Hardware](https://docs.px4.io/main/en/flight_controller/) | Compatible flight controllers |
-| [Release Notes](https://docs.px4.io/main/en/releases/) | What's new in each release |
-| [Contribution Guide](https://docs.px4.io/main/en/contribute/) | How to contribute to PX4 |
+```bash
+brew install openjdk ant
+echo 'export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+java -version
+javac -version
+ant -version
+```
 
-## Community
+Якщо `jmavsim` таргет не зʼявляється, пересконфігуруйте PX4:
 
-- **Weekly Dev Call** — open to all developers ([Dronecode calendar](https://www.dronecode.org/calendar/))
-- **Discord** — [Join the Dronecode server](https://discord.gg/dronecode)
-- **Discussion Forum** — [PX4 Discuss](https://discuss.px4.io/)
-- **Maintainers** — see [`MAINTAINERS.md`](MAINTAINERS.md)
-- **Contributor Stats** — [LFX Insights](https://insights.lfx.linuxfoundation.org/foundation/dronecode)
+```bash
+rm -rf build/px4_sitl_default
+make px4_sitl jmavsim
+```
 
-## Contributing
+---
 
-We welcome contributions of all kinds — bug reports, documentation, new features, and code reviews. Please read the [Contribution Guide](https://docs.px4.io/main/en/contribute/) to get started.
+## 3) Інструкція запуску (обовʼязково в такому порядку)
 
-## Governance
+### Термінал 1 — PX4 SITL + jMAVSim
 
-The PX4 Autopilot project is hosted by the [Dronecode Foundation](https://www.dronecode.org/), a [Linux Foundation](https://www.linuxfoundation.org/) Collaborative Project. Dronecode holds all PX4 trademarks and serves as the project's legal guardian, ensuring vendor-neutral stewardship — no single company owns the name or controls the roadmap. The source code is licensed under the [BSD 3-Clause](LICENSE) license, so you are free to use, modify, and distribute it in your own projects.
+```bash
+make px4_sitl jmavsim
+```
 
-<p align="center">
-  <a href="https://www.dronecode.org/">
-    <img src="docs/assets/site/dronecode_logo.svg" alt="Dronecode Logo" width="180">
-  </a>
-</p>
+Дочекайтесь у консолі PX4 повідомлень типу `Ready for takeoff`.
+
+### Термінал 2 — Backend API
+
+```bash
+python3 app.py
+```
+
+API стартує на `http://127.0.0.1:8000`.
+Якщо папки `static` немає — це ок, backend запуститься без вбудованої роздачі frontend.
+
+### Термінал 3 — Frontend UI
+
+```bash
+cd drone-ui
+npm install
+npm start
+```
+
+UI відкривається на `http://127.0.0.1:3000`.
+
+---
+
+## 4) Швидкий сценарій польоту
+
+1. Відкрити UI на `http://127.0.0.1:3000`
+2. Натиснути `ARM`
+3. Натиснути `ЗЛІТ`
+4. Для ручного керування:
+   - або `OFFBOARD` + слайдери
+   - або зміщення кнопками/клавіатурою (див. нижче)
+5. `RESET` — повернення додому (RTL)
+6. `LAND` — посадка
+
+---
+
+## 5) Керування з UI
+
+### Кнопки
+
+- `ARM` / `DISARM`
+- `ЗЛІТ` / `ПОСАДКА`
+- `RESET` — повернення в Home (RTL)
+- Перемикання режимів (`OFFBOARD`, `MANUAL`, `ALTCTL`, `POSCTL`, `AUTO`)
+
+### Смещения по осям
+
+Доступні імпульсні кнопки:
+
+- `⬆ Вверх` / `⬇ Вниз`
+- `⬅ Влево` / `➡ Вправо`
+- `⏩ Вперед` / `⏪ Назад`
+
+### Клавіатура (утримання = плавний рух)
+
+- `←/→` — вліво/вправо
+- `↑/↓` — вгору/вниз
+- `W/S` — вперед/назад
+
+Поки клавіша затиснута, команди йдуть безперервно; після відпускання — одразу стоп (нейтраль).
+
+---
+
+## 6) Основні API ендпоінти
+
+- `GET /api/telemetry` — телеметрія
+- `GET /api/mavlink_link` — діагностика MAVLink каналу
+- `POST /api/arm`
+- `POST /api/disarm`
+- `POST /api/takeoff?altitude=10`
+- `POST /api/land`
+- `POST /api/reset` — RTL (Return to Launch)
+- `POST /api/mode/{mode}`
+- `POST /api/nudge` — короткий імпульс зміщення
+- `POST /api/manual_axes` — безперервне зміщення
+- `POST /api/manual_axes/stop` — стоп безперервного зміщення
+- `POST /api/offboard_rates` — одиничний кадр OFFBOARD
+- `WS /ws/telemetry`
+- `WS /ws/offboard_control`
+
+---
+
+## 7) Типові проблеми та рішення
+
+### 1) Дрон не реагує на команди
+
+- Переконайтесь, що `app.py` запущений **після** старту SITL.
+- Перевірте `GET /api/mavlink_link` (має бути активний лінк).
+- Подивіться консоль PX4 на `Arming denied` / `Preflight Fail`.
+
+### 2) У браузері “нема симулятора”
+
+- Це нормально: jMAVSim не рендериться в браузері.
+- Дивіться окреме вікно jMAVSim.
+
+### 3) `ninja: error: unknown target 'jmavsim'`
+
+- Встановіть `openjdk` і `ant`.
+- Очистіть конфігурацію: `rm -rf build/px4_sitl_default`.
+- Зберіть знову: `make px4_sitl jmavsim`.
+
+### 4) OFFBOARD не працює
+
+- Спочатку `ARM`.
+- Переведіть у режим `OFFBOARD`.
+- Увімкніть потік команд у UI (WebSocket).
+
+### 5) Автодизарм
+
+- Якщо PX4 показує preflight/failsafe — спершу усунути причину за логом PX4.
+
+---
+
+## 8) Нотатки для розробки
+
+- Backend файл: `app.py`
+- Frontend файл: `drone-ui/src/App.tsx`
+- Стилі: `drone-ui/src/App.css`
+
+Перевірка після змін:
+
+```bash
+# backend
+python3 -m py_compile app.py
+
+# frontend
+cd drone-ui
+npx tsc --noEmit
+```
